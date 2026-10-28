@@ -14,7 +14,7 @@
 <link rel="apple-touch-icon" href="icon-180.png">
 <link rel="icon" type="image/png" href="icon-192.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Itim&family=Be+Vietnam+Pro:wght@400;500;600;700&display=swap">
 <style>
 /* Layout: phone-shaped single column (max 480px): header, tab content, floating rounded tab bar + add button; every editor opens as a bottom sheet. */
 :root{
@@ -348,6 +348,77 @@ h1,h2,h3,p{margin:0}
 .toast .acts{flex-wrap:nowrap}
 .toast .btn{padding:8px 12px;font-size:13px;border-radius:12px}
 @media (prefers-reduced-motion:reduce){.switch,.switch::after{transition:none}.fab:active{transform:none}}
+
+/* ===== Notebook skin: dotted paper, spiral rings, tear-off calendar, sticky notes ===== */
+:root{--paper:#FFFEFB;--rule:color-mix(in srgb,var(--a) 15%,#E8E2DC);--dot:color-mix(in srgb,var(--a) 24%,transparent);--ring:#B8AFAA;--tape:color-mix(in srgb,var(--a) 34%,transparent);--hand:'Itim','Be Vietnam Pro',system-ui,sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--paper:#251B21;--rule:color-mix(in srgb,var(--aD) 18%,#3B2F35);--dot:color-mix(in srgb,var(--aD) 20%,transparent);--ring:#75686E;--tape:color-mix(in srgb,var(--aD) 36%,transparent)}}
+:root[data-theme="dark"]{--paper:#251B21;--rule:color-mix(in srgb,var(--aD) 18%,#3B2F35);--dot:color-mix(in srgb,var(--aD) 20%,transparent);--ring:#75686E;--tape:color-mix(in srgb,var(--aD) 36%,transparent)}
+body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.1px,transparent 1.5px);background-size:20px 20px}
+.shell::before,.panel::before{content:"";display:block;flex:none;height:20px;background:radial-gradient(circle at 13px 10px,transparent 0 3px,var(--ring) 3.4px 5.3px,transparent 5.7px) 0 0/26px 20px repeat-x}
+.shell::before{margin:0 4px 6px}
+.panel::before{margin:-8px 0 -8px}
+.h1,.h2,.p-h h2,.party-card b,.trip-hd b,.navlbl,.sec-t,.lbl,.wdate b,.stat b,.tab,.seg button,.chip,.btn,.pill,.hero-b b{font-family:var(--hand)}
+.h1{font-weight:400;font-size:34px;letter-spacing:0}
+.h1 .yr{font-family:var(--font-body)}
+.h2,.p-h h2,.party-card b,.trip-hd b{font-weight:400}
+.sec-t{text-transform:none;letter-spacing:0;font-size:16px;font-weight:400;color:var(--a);margin:14px 0 6px}
+.lbl{text-transform:none;letter-spacing:0;font-size:15px;font-weight:400;color:var(--muted)}
+.btn,.pill,.chip,.seg button{font-weight:400;font-size:15px}
+.card,.hb,.wrow{background:var(--paper);border:1px solid var(--rule);border-radius:12px;box-shadow:0 1px 0 var(--rule),0 12px 20px -16px rgba(70,30,45,.55)}
+.tape{position:relative}
+.tape::after{content:"";position:absolute;top:-10px;left:50%;width:92px;height:20px;margin-left:-46px;background:repeating-linear-gradient(45deg,var(--tape) 0 6px,color-mix(in srgb,var(--tape) 55%,transparent) 6px 12px);transform:rotate(-2.5deg);border-radius:2px;pointer-events:none}
+.td,.ev,.dcard,.pi,.pk,.lrow,.axb{background:var(--paper);border:1px solid var(--rule);border-radius:12px}
+.card .td,.card .ev,.card .dcard{background:color-mix(in srgb,var(--a) 4%,var(--paper))}
+.td-t,.ev-t,.de-t,.pi-b b{font-weight:500}
+/* printed month page */
+.cal{padding:0;overflow:hidden}
+.cal .wd{background:var(--a);padding:7px 0 6px}
+.cal .wd span{color:var(--on-a);padding:0;font-family:var(--hand);font-size:14px;font-weight:400}
+.cal .wd .sun{color:var(--on-a);opacity:.85}
+.grid{gap:0}
+.cell{border:0;border-right:1px solid var(--rule);border-bottom:1px solid var(--rule);border-radius:0;min-height:80px;padding:4px 3px}
+.grid .cell:nth-child(7n){border-right:0}
+.cell:hover{background:color-mix(in srgb,var(--a) 6%,var(--paper))}
+.cell.sel{background:color-mix(in srgb,var(--a) 11%,var(--paper));box-shadow:inset 0 0 0 2px var(--a);border-color:var(--rule)}
+.c-n{font-family:var(--hand);font-weight:400;font-size:17px;width:26px;height:24px}
+.cell.today .c-n{background:none;color:var(--a);box-shadow:0 0 0 2px var(--a);border-radius:52% 45% 55% 42%;transform:rotate(-7deg)}
+.c-bar{font-family:var(--font-body)}
+/* tear-off calendar + Xu */
+.nb-hero{display:grid;grid-template-columns:124px minmax(0,1fr);gap:12px;align-items:end;margin:4px 0 16px}
+.bloc{background:var(--paper);border:1px solid var(--rule);border-radius:8px;text-align:center;padding-bottom:10px;overflow:hidden;box-shadow:0 3px 0 -1px var(--paper),0 3px 0 0 var(--rule),0 6px 0 -2px var(--paper),0 6px 0 -1px var(--rule),0 16px 20px -14px rgba(70,30,45,.55)}
+.bloc-top{position:relative;background:var(--a);color:var(--on-a);font-family:var(--hand);font-size:14px;padding:13px 4px 5px}
+.bloc-top::before{content:"";position:absolute;top:4px;left:8px;right:8px;height:5px;background:radial-gradient(circle,var(--paper) 1.7px,transparent 2.1px) 0 0/10px 5px repeat-x}
+.bloc-n{font-family:var(--hand);font-size:66px;line-height:1;color:var(--a);margin-top:6px;font-variant-numeric:tabular-nums}
+.bloc.sun .bloc-n{color:var(--late)}
+.bloc-wd{font-weight:700;font-size:14px}
+.bloc-lun{font-size:11.5px;color:var(--muted);line-height:1.35;border-top:1px dashed var(--rule);padding-top:5px;margin:5px 10px 0}
+.xu{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
+.bubble{position:relative;align-self:stretch;background:var(--paper);border:1.5px solid var(--fg);border-radius:18px;padding:9px 13px;box-shadow:3px 3px 0 var(--fg);margin-bottom:6px}
+.bubble::after{content:"";position:absolute;right:40px;bottom:-8.5px;width:14px;height:14px;background:var(--paper);border-right:1.5px solid var(--fg);border-bottom:1.5px solid var(--fg);transform:rotate(45deg)}
+.bubble b{display:block;font-family:var(--hand);font-size:18px;font-weight:400;line-height:1.2}
+.bubble span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.xu .mitbtn{margin-right:12px}
+/* diary & notes on paper */
+.de{background:var(--paper);border:1px solid var(--rule);border-left:4px double color-mix(in srgb,var(--late) 50%,transparent);border-radius:6px 12px 12px 6px;background-image:repeating-linear-gradient(to bottom,transparent 0 25px,var(--rule) 25px 26px);background-position:0 8px;box-shadow:0 12px 20px -16px rgba(70,30,45,.55)}
+.de-t{line-height:26px}
+#f-text,#f-body{background:var(--paper);background-image:repeating-linear-gradient(to bottom,transparent 0 27px,var(--rule) 27px 28px);background-attachment:local;line-height:28px;padding-top:2px}
+.ngrid{gap:16px 12px;padding-top:8px}
+.note{position:relative;border:0;border-radius:3px;background:color-mix(in srgb,var(--c) 30%,var(--paper));box-shadow:0 10px 16px -12px rgba(60,30,40,.6);transform:rotate(-1.2deg)}
+.ngrid .note:nth-child(even){transform:rotate(1.1deg)}
+.note::before{content:"";position:absolute;top:-9px;left:50%;width:58px;height:17px;margin-left:-29px;background:var(--tape);transform:rotate(2deg);border-radius:2px}
+.note b{font-family:var(--hand);font-weight:400;font-size:17px}
+/* stitched tab bar + highlighter */
+.tabs{background:var(--paper);border:1px solid var(--rule);border-radius:24px;outline:1.5px dashed color-mix(in srgb,var(--a) 40%,transparent);outline-offset:-6px;box-shadow:0 10px 26px -10px rgba(60,20,40,.35)}
+.tab{font-weight:400;font-size:13.5px;padding:7px 2px 6px}
+.tab[aria-current="page"]{background:none;color:var(--fg)}
+.tab[aria-current="page"] svg{color:var(--a)}
+.tab[aria-current="page"] span{background:linear-gradient(transparent 52%,color-mix(in srgb,var(--a) 34%,transparent) 52% 92%,transparent 92%);padding:0 3px}
+.seg{background:var(--paper);border:1px solid var(--rule)}
+.seg button[aria-pressed="true"]{background:var(--soft);box-shadow:none}
+.panel{background:var(--paper)}
+.banner{background:color-mix(in srgb,var(--amber) 22%,var(--paper));border-radius:4px;transform:rotate(-.6deg);box-shadow:0 8px 14px -12px rgba(60,30,40,.6)}
+.stat .card{text-align:left}
+.fab{border-radius:50%}
 </style>
 </head>
 <body>
@@ -476,7 +547,7 @@ function mit(o){
   if(f==='sleepy')h+='<text x="94" y="26" font-size="15" font-weight="800" fill="'+DK+'" font-family="sans-serif">z</text><text x="105" y="15" font-size="11" font-weight="800" fill="'+DK+'" font-family="sans-serif">z</text>';
   return h+'</g></svg>';
 }
-function petName(){return (S.settings.petName||'Mít').trim()||'Mít';}
+function petName(){var n=(S.settings.petName||'').trim();return !n||n==='Mít'?'Xu':n;}
 function mitEmpty(face,title,sub,prop){return '<div class="mit-empty">'+mit({s:96,face:face,prop:prop})+'<b>'+esc(title)+'</b>'+(sub?'<span>'+esc(sub)+'</span>':'')+'</div>';}
 function greet(hh){return hh<11?'Chào buổi sáng!':hh<14?'Trưa rồi, ăn gì chưa?':hh<18?'Chào buổi chiều!':'Buổi tối vui vẻ!';}
 function heroState(){
@@ -500,8 +571,11 @@ function heroState(){
 }
 var QUIPS=['Meo~','Uống nước chưa đó?','Hôm nay bạn làm tốt lắm!','Mẹo: vuốt trái một mục để xoá nhanh.','Mẹo: giữ lâu một mục để mở menu.','Mẹo: bấm 2 lần vào một ngày để thêm việc.','Vuốt bụng '+'mình đi, mình cho vuốt đó.','Mình canh giờ thuốc giùm bạn nè.'];
 function heroHtml(){
-  var st=heroState();
-  return '<section class="hero" aria-label="Lời chào"><button type="button" class="mitbtn" data-act="mit-tap" aria-label="Chạm vào '+esc(petName())+'">'+mit({s:68,face:st.face,prop:st.prop,wave:st.wave})+'</button><div class="hero-b" id="hero-b"'+(st.trip?' data-act="open-trip" data-id="'+esc(st.trip)+'" role="button" tabindex="0" style="cursor:pointer"':'')+'><b>'+esc(st.t)+'</b><span>'+esc(st.s)+'</span></div></section>';
+  var st=heroState(),dt=parse(today),l=lunarOf(today);
+  return '<section class="nb-hero" aria-label="Hôm nay">'+
+    '<div class="bloc'+(dt.getDay()===0?' sun':'')+'" aria-label="Hôm nay '+esc(dLong(today))+'"><div class="bloc-top">Tháng '+(dt.getMonth()+1)+' · '+dt.getFullYear()+'</div><div class="bloc-n">'+dt.getDate()+'</div><div class="bloc-wd">'+WD_L[dt.getDay()]+'</div><div class="bloc-lun">Âm lịch '+l[0]+'/'+l[1]+(l[3]?' nhuận':'')+'<br>'+canChi(l[2])+'</div></div>'+
+    '<div class="xu"><div class="bubble" id="hero-b"'+(st.trip?' data-act="open-trip" data-id="'+esc(st.trip)+'" role="button" tabindex="0" style="cursor:pointer"':'')+'><b>'+esc(st.t)+'</b><span>'+esc(st.s)+'</span></div>'+
+    '<button type="button" class="mitbtn" data-act="mit-tap" aria-label="Chạm vào '+esc(petName())+'">'+mit({s:86,face:st.face,prop:st.prop,wave:st.wave})+'</button></div></section>';
 }
 function party(face,title,sub,prop){
   var old=document.getElementById('party');if(old)old.remove();
@@ -823,7 +897,7 @@ function dayPanel(ds){
   var evs=eventsOn(ds),tds=todosOn(ds),hbs=habitsOn(ds),di=S.diary[ds];
   var lunTxt='';
   if(S.settings.lunar){var l=lunarOf(ds);lunTxt='<p class="lun-l">Âm lịch: ngày '+l[0]+' tháng '+l[1]+(l[3]?' nhuận':'')+', năm '+canChi(l[2])+'</p>';}
-  var h='<section class="card" aria-label="Chi tiết ngày"><div class="day-h"><div><h2 class="h2">'+esc(ds===today?'Hôm nay, '+dLong(ds).split(', ')[1]:dLong(ds))+'</h2>'+lunTxt+'</div><button type="button" class="pill sm" data-act="add-menu">+ Thêm</button></div>';
+  var h='<section class="card tape" aria-label="Chi tiết ngày"><div class="day-h"><div><h2 class="h2">'+esc(ds===today?'Hôm nay, '+dLong(ds).split(', ')[1]:dLong(ds))+'</h2>'+lunTxt+'</div><button type="button" class="pill sm" data-act="add-menu">+ Thêm</button></div>';
   if(evs.length)h+='<p class="sec-t">Sự kiện</p><ul class="list">'+evs.map(function(e){return evRow(e,ds);}).join('')+'</ul>';
   if(tds.length)h+='<p class="sec-t">Việc cần làm</p><ul class="list">'+tds.map(todoRow).join('')+'</ul>';
   if(hbs.length)h+='<p class="sec-t">Thói quen</p><div class="hchips">'+hbs.map(function(x){return habitChip(x,ds);}).join('')+'</div>';
@@ -1083,7 +1157,7 @@ function renderSheet(){
       '<button type="button" class="btn w" data-act="open-labels">Quản lý nhãn</button>'+
       '<div class="box"><b>Sao lưu dữ liệu</b><p class="hint">Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng hãy xuất một bản sao lưu (lưu vào Tệp hoặc gửi cho chính bạn) để không bị mất khi đổi máy.</p>'+(S.settings.lastBackup?'<p class="hint">Lần sao lưu gần nhất: '+esc(S.settings.lastBackup)+'</p>':'')+'<div class="acts"><button type="button" class="btn main" data-act="export">Xuất bản sao lưu</button><label class="btn" for="f-import" style="cursor:pointer">Khôi phục</label><input id="f-import" type="file" accept="application/json,.json" hidden></div>'+(d.importErr?'<p class="err" role="alert">'+esc(d.importErr)+'</p>':'')+'</div>'+
       '<div class="box"><b>Về nhắc nhở</b><p class="hint">App hiện thông báo khi đến giờ nếu app đang mở. Để điện thoại reo chuông cả khi khoá màn hình, hãy đặt thêm trong app Lời nhắc của iPhone.</p></div>'+
-      '<p class="hint" style="text-align:center">Phiên bản 2.0 · Mèo Mít</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
+      '<p class="hint" style="text-align:center">Phiên bản 2.1 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
     break;
   }
   document.getElementById('panel').innerHTML=h;
@@ -1403,7 +1477,7 @@ document.getElementById('sheet').addEventListener('click',function(e){if(e.targe
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&stack.length)closeSheet();});
 function onField(e){
   var el=e.target,t=top();
-  if(el.id==='f-pet'){if(e.type==='change'){S.settings.petName=el.value.trim()||'Mít';mark('settings');renderMain();}return;}
+  if(el.id==='f-pet'){if(e.type==='change'){S.settings.petName=el.value.trim()||'Xu';mark('settings');renderMain();}return;}
   if(el.id==='note-q'){ui.q=el.value;var pos=el.selectionStart;renderMain();var n=document.getElementById('note-q');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(x){}}return;}
   if(!t)return;var d=t.d;
   if(el.hasAttribute('data-f'))d[el.getAttribute('data-f')]=el.value;
