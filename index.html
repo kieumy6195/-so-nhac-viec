@@ -808,7 +808,13 @@ function streak(h){
 
 /* ================= rendering ================= */
 var TITLES={cal:'Lịch',todo:'Việc cần làm',habit:'Thói quen',diary:'Nhật ký',notes:'Ghi chú'};
-function applyTheme(){document.documentElement.setAttribute('data-accent',S.settings.theme||'pink');}
+function applyTheme(){
+  var r=document.documentElement,m=S.settings.mode||'auto';
+  r.setAttribute('data-accent',S.settings.theme||'pink');
+  if(m==='light'||m==='dark')r.setAttribute('data-theme',m);else r.removeAttribute('data-theme');
+  var dark=m==='dark'||(m==='auto'&&window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches);
+  document.querySelectorAll('meta[name="theme-color"]').forEach(function(t){t.setAttribute('content',dark?'#1B1216':'#FFF6F9');t.removeAttribute('media');});
+}
 function render(){applyTheme();renderHeader();renderMain();renderTabs();if(stack.length)renderSheet();}
 
 function renderHeader(){
@@ -1152,12 +1158,13 @@ function renderSheet(){
   case 'settings':
     h=head('Cài đặt')+
       '<div class="field"><span class="lbl">Màu chủ đề</span><div class="wrap">'+THEMES.map(function(x){return '<button type="button" role="radio" class="th" style="background:'+x[2]+'" data-act="set-theme" data-v="'+x[0]+'" aria-checked="'+(S.settings.theme===x[0])+'" aria-label="'+x[1]+'"></button>';}).join('')+'</div></div>'+
+      '<div class="field"><span class="lbl">Giao diện</span><div class="seg" role="radiogroup" aria-label="Giao diện">'+[['auto','Tự động'],['light','Sáng'],['dark','Tối']].map(function(x){return '<button type="button" role="radio" data-act="set-mode" data-v="'+x[0]+'" aria-pressed="'+((S.settings.mode||'auto')===x[0])+'" aria-checked="'+((S.settings.mode||'auto')===x[0])+'">'+x[1]+'</button>';}).join('')+'</div><span class="hint">Tự động: đổi theo cài đặt sáng/tối của iPhone.</span></div>'+
       sw('lunar',S.settings.lunar,'Hiện âm lịch trên lịch')+
       '<div class="field"><label class="lbl" for="f-pet">Tên bé mèo</label><div class="trow">'+mit({s:44,face:'happy'})+'<input id="f-pet" type="text" maxlength="20" value="'+esc(petName())+'"></div></div>'+
       '<button type="button" class="btn w" data-act="open-labels">Quản lý nhãn</button>'+
       '<div class="box"><b>Sao lưu dữ liệu</b><p class="hint">Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng hãy xuất một bản sao lưu (lưu vào Tệp hoặc gửi cho chính bạn) để không bị mất khi đổi máy.</p>'+(S.settings.lastBackup?'<p class="hint">Lần sao lưu gần nhất: '+esc(S.settings.lastBackup)+'</p>':'')+'<div class="acts"><button type="button" class="btn main" data-act="export">Xuất bản sao lưu</button><label class="btn" for="f-import" style="cursor:pointer">Khôi phục</label><input id="f-import" type="file" accept="application/json,.json" hidden></div>'+(d.importErr?'<p class="err" role="alert">'+esc(d.importErr)+'</p>':'')+'</div>'+
       '<div class="box"><b>Về nhắc nhở</b><p class="hint">App hiện thông báo khi đến giờ nếu app đang mở. Để điện thoại reo chuông cả khi khoá màn hình, hãy đặt thêm trong app Lời nhắc của iPhone.</p></div>'+
-      '<p class="hint" style="text-align:center">Phiên bản 2.1 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
+      '<p class="hint" style="text-align:center">Phiên bản 2.2 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
     break;
   }
   document.getElementById('panel').innerHTML=h;
@@ -1467,6 +1474,7 @@ document.addEventListener('click',function(ev){
   case 'label-save':saveLabel(d);break;
   case 'label-del':delLabel(d);break;
   case 'set-theme':S.settings.theme=v;mark('settings');render();break;
+  case 'set-mode':S.settings.mode=v;mark('settings');render();break;
   case 'wipe':twoTap(d,'wipe',function(){var th=S.settings.theme;S=emptyState();S.settings.theme=th;mark.apply(null,SECS);closeAll();render();});break;
   case 'export':doExport();break;
   case 'toast-close':dropToast(b.closest('.toast'));break;
@@ -1610,6 +1618,7 @@ function tick(){
 }
 
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',function(){applyTheme();});}catch(e){}
 if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();}).catch(function(){});});}
 render();
 tick();
