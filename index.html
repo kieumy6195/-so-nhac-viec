@@ -1083,7 +1083,7 @@ function renderSheet(){
       '<button type="button" class="btn w" data-act="open-labels">Quản lý nhãn</button>'+
       '<div class="box"><b>Sao lưu dữ liệu</b><p class="hint">Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng hãy xuất một bản sao lưu (lưu vào Tệp hoặc gửi cho chính bạn) để không bị mất khi đổi máy.</p>'+(S.settings.lastBackup?'<p class="hint">Lần sao lưu gần nhất: '+esc(S.settings.lastBackup)+'</p>':'')+'<div class="acts"><button type="button" class="btn main" data-act="export">Xuất bản sao lưu</button><label class="btn" for="f-import" style="cursor:pointer">Khôi phục</label><input id="f-import" type="file" accept="application/json,.json" hidden></div>'+(d.importErr?'<p class="err" role="alert">'+esc(d.importErr)+'</p>':'')+'</div>'+
       '<div class="box"><b>Về nhắc nhở</b><p class="hint">App hiện thông báo khi đến giờ nếu app đang mở. Để điện thoại reo chuông cả khi khoá màn hình, hãy đặt thêm trong app Lời nhắc của iPhone.</p></div>'+
-      '<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
+      '<p class="hint" style="text-align:center">Phiên bản 2.0 · Mèo Mít</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
     break;
   }
   document.getElementById('panel').innerHTML=h;
@@ -1536,7 +1536,7 @@ function tick(){
 }
 
 try{if(navigator.storage&&navigator.storage.persist)navigator.storage.persist();}catch(e){}
-if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js').catch(function(){});});}
+if('serviceWorker' in navigator){window.addEventListener('load',function(){navigator.serviceWorker.register('sw.js',{updateViaCache:'none'}).then(function(r){r.update();}).catch(function(){});});}
 render();
 tick();
 setInterval(tick,20000);
