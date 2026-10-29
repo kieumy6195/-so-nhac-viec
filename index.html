@@ -102,11 +102,18 @@ h1,h2,h3,p{margin:0}
 .c-more{font-size:9.5px;color:var(--muted);padding-left:3px}
 .stk{--sz:22px;width:var(--sz);height:var(--sz);border-radius:50%;background:var(--c);color:var(--on-a);display:inline-grid;place-items:center;flex:none;box-shadow:0 0 0 2px #fff,0 2px 3px 1px rgba(60,30,40,.3);transform:rotate(var(--r,0deg))}
 .stk svg{width:60%;height:60%}
+.stk.emo{background:color-mix(in srgb,var(--c) 24%,#fff);box-shadow:inset 0 0 0 1.5px var(--c),0 0 0 2px #fff,0 2px 3px 1px rgba(60,30,40,.3)}
+.stk .em{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;font-size:calc(var(--sz) * .6);line-height:1;display:block;transform:translateY(.02em)}
+.emopick{display:grid;grid-template-columns:repeat(auto-fill,minmax(44px,1fr));gap:6px}
+.emob{height:44px;border-radius:12px;font-size:24px;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;display:grid;place-items:center;border:2px solid transparent}
+.emob[aria-checked="true"]{border-color:var(--fg);background:var(--soft)}
+.emoin{display:flex;gap:10px;align-items:center}
+.emoin input{max-width:120px;font-size:22px;text-align:center}
 .stk.sq{border-radius:7px}
 .stk.xs{--sz:16px;box-shadow:0 0 0 1.5px #fff,0 1px 2px rgba(60,30,40,.3)}
 .stk.lg{--sz:30px}
 .c-stk{display:flex;flex-wrap:wrap;gap:4px 0;padding:3px 0 0 4px;align-items:center}
-.c-stk .stk{--sz:20px;margin-right:-3px}
+.c-stk .stk{--sz:23px;margin-right:-4px}
 .c-stk .c-more{padding-left:6px}
 .cell:hover .stk,.cell.sel .stk{animation:stkpop .4s cubic-bezier(.3,1.6,.5,1)}
 @keyframes stkpop{0%{transform:rotate(var(--r)) scale(.7)}100%{transform:rotate(var(--r)) scale(1)}}
@@ -787,11 +794,15 @@ function lunarOf(s){if(!lunCache[s]){var d=parse(s);lunCache[s]=solar2lunar(d.ge
 function canChi(y){return CAN[(y+6)%10]+' '+CHI[(y+8)%12];}
 
 /* ================= state ================= */
-function defaultLabels(){return [{id:'tennis',name:'Tennis',color:'lime',icon:'ball'},{id:'thuoc',name:'Thuốc của tôi',color:'coral',icon:'pill'},{id:'meo',name:'Mèo',color:'violet',icon:'paw'},{id:'khac',name:'Khác',color:'sky',icon:'star'}];}
+function defaultLabels(){return [{id:'tennis',name:'Tennis',color:'lime',icon:'ball',emoji:'🎾'},{id:'thuoc',name:'Thuốc của tôi',color:'coral',icon:'pill',emoji:'💊'},{id:'meo',name:'Mèo',color:'violet',icon:'paw',emoji:'🐱'},{id:'khac',name:'Khác',color:'sky',icon:'star',emoji:'⭐'}];}
+var EMOJIS=['🎾','🏸','⚽','🏃‍♀️','🧘‍♀️','🏋️‍♀️','🚴‍♀️','🏊‍♀️','💊','🩺','🏥','🦷','💉','🐱','🐾','🐶','🐟','✈️','🏖️','🧳','🚗','🏕️','🗺️','🎂','🎁','🎉','💐','☕','🍜','🍣','🍰','🛒','🛍️','💼','💻','📚','✏️','🎨','🎮','🎬','🎵','🏠','🧹','🪴','💰','💖','⭐','🌙','🔔','📌'];
+function guessEmoji(n){n=(n||'').toLowerCase();if(/tennis/.test(n))return '🎾';if(/cầu lông/.test(n))return '🏸';if(/thuốc/.test(n))return '💊';if(/khám|bệnh/.test(n))return '🩺';if(/mèo|xu/.test(n))return '🐱';if(/chó/.test(n))return '🐶';if(/đi chơi|du lịch|chuyến/.test(n))return '✈️';if(/sinh nhật/.test(n))return '🎂';if(/cà phê|cafe|hẹn/.test(n))return '☕';if(/mua|shop/.test(n))return '🛒';if(/làm|việc|công ty|họp/.test(n))return '💼';if(/gym|tập/.test(n))return '🏋️‍♀️';if(/chạy/.test(n))return '🏃‍♀️';if(/ăn|nấu/.test(n))return '🍜';if(/học|sách/.test(n))return '📚';if(/nhà|dọn/.test(n))return '🏠';return '⭐';}
+function labelEmoji(l){return (l&&l.emoji)||guessEmoji(l&&l.name);}
+function firstGlyph(v){v=(v||'').trim();if(!v)return '';try{if(window.Intl&&Intl.Segmenter){var it=new Intl.Segmenter('vi',{granularity:'grapheme'}).segment(v)[Symbol.iterator]().next();return it.value?it.value.segment:'';}}catch(e){}return Array.from(v)[0]||'';}
 function guessIcon(n){n=(n||'').toLowerCase();if(/tennis|cầu lông|bóng/.test(n))return 'ball';if(/thuốc|khám|bệnh/.test(n))return 'pill';if(/mèo|xu|chó|pet/.test(n))return 'paw';if(/đi chơi|du lịch|chuyến|bay/.test(n))return 'plane';if(/sinh nhật/.test(n))return 'cake';if(/cà phê|cafe|hẹn/.test(n))return 'cup';if(/mua|shop/.test(n))return 'cart';if(/làm|việc|công ty|họp/.test(n))return 'work';if(/gym|tập|chạy/.test(n))return 'gym';if(/ăn|nấu/.test(n))return 'food';if(/nhà/.test(n))return 'home';return 'star';}
 function labelIcon(l){return (l&&l.icon&&HICON[l.icon])?l.icon:guessIcon(l&&l.name);}
 function hashDeg(str){var h=0;for(var i=0;i<str.length;i++)h=(h*31+str.charCodeAt(i))|0;return (Math.abs(h)%25)-12;}
-function stk(l,cls,seed){return '<span class="stk'+(cls?' '+cls:'')+' col-'+l.color+'" style="--r:'+(seed?hashDeg(seed):0)+'deg" aria-hidden="true">'+svg(HICON[labelIcon(l)],12,2.6)+'</span>';}
+function stk(l,cls,seed){return '<span class="stk emo'+(cls?' '+cls:'')+' col-'+l.color+'" style="--r:'+(seed?hashDeg(seed):0)+'deg" aria-hidden="true"><span class="em">'+esc(labelEmoji(l))+'</span></span>';}
 function defaultSettings(){return {theme:'pink',lunar:true,labels:defaultLabels(),sample:false};}
 function emptyState(){return {settings:defaultSettings(),events:[],todos:[],habits:[],diary:{},notes:[],books:[]};}
 function sampleState(){
@@ -1357,7 +1368,7 @@ function renderSheet(){
       var e=d.edit,fb=e.id?fallbackLabel(e.id):null;
       h+='<div class="box"><div class="field"><label class="lbl" for="f-lname">'+(e.id?'Tên nhãn':'Tên nhãn mới')+'</label><input id="f-lname" data-le="name" type="text" maxlength="30" value="'+esc(e.name)+'" placeholder="Ví dụ: Chạy bộ"></div>'+
         '<div class="field"><span class="lbl">Màu</span><div class="wrap">'+COLORS.map(function(c){return '<button type="button" role="radio" class="sw col-'+c[0]+'" data-act="label-color" data-v="'+c[0]+'" aria-checked="'+(e.color===c[0])+'" aria-label="'+c[1]+'"></button>';}).join('')+'</div></div>'+
-        '<div class="field"><span class="lbl">Sticker</span><div class="wrap stkpick">'+HICON_KEYS.map(function(k){return '<button type="button" role="radio" class="stkb" data-act="label-icon" data-v="'+k+'" aria-checked="'+(e.icon===k)+'" aria-label="'+k+'">'+stk({color:e.color,icon:k},'lg')+'</button>';}).join('')+'</div></div>'+
+        '<div class="field"><span class="lbl">Sticker</span><div class="emoin">'+stk({color:e.color,emoji:e.emoji},'lg')+'<input id="f-lemoji" type="text" maxlength="12" value="'+esc(e.emoji)+'" aria-label="Gõ emoji bất kỳ" placeholder="🙂"><span class="hint">Gõ emoji bất kỳ từ bàn phím, hoặc chọn bên dưới</span></div><div class="emopick">'+EMOJIS.map(function(k){return '<button type="button" role="radio" class="emob" data-act="label-emoji" data-v="'+k+'" aria-checked="'+(e.emoji===k)+'">'+k+'</button>';}).join('')+'</div></div>'+
         (e.err?'<p class="err" role="alert">'+esc(e.err)+'</p>':'')+
         (e.id&&fb?'<p class="hint">Khi xoá, các mục mang nhãn này sẽ chuyển sang “'+esc(fb.name)+'”.</p>':'')+
         '<div class="acts"><button type="button" class="btn main" data-act="label-save">'+(e.id?'Lưu nhãn':'Thêm nhãn')+'</button><button type="button" class="btn" data-act="label-cancel">Huỷ</button>'+
@@ -1374,7 +1385,7 @@ function renderSheet(){
       '<button type="button" class="btn w" data-act="open-labels">Quản lý nhãn</button>'+
       '<div class="box"><b>Sao lưu dữ liệu</b><p class="hint">Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng hãy xuất một bản sao lưu (lưu vào Tệp hoặc gửi cho chính bạn) để không bị mất khi đổi máy.</p>'+(S.settings.lastBackup?'<p class="hint">Lần sao lưu gần nhất: '+esc(S.settings.lastBackup)+'</p>':'')+'<div class="acts"><button type="button" class="btn main" data-act="export">Xuất bản sao lưu</button><label class="btn" for="f-import" style="cursor:pointer">Khôi phục</label><input id="f-import" type="file" accept="application/json,.json" hidden></div>'+(d.importErr?'<p class="err" role="alert">'+esc(d.importErr)+'</p>':'')+'</div>'+
       '<div class="box"><b>Về nhắc nhở</b><p class="hint">App hiện thông báo khi đến giờ nếu app đang mở. Để điện thoại reo chuông cả khi khoá màn hình, hãy đặt thêm trong app Lời nhắc của iPhone.</p></div>'+
-      '<p class="hint" style="text-align:center">Phiên bản 3.3 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
+      '<p class="hint" style="text-align:center">Phiên bản 3.4 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
     break;
   }
   document.getElementById('panel').innerHTML=h;
@@ -1699,8 +1710,8 @@ function saveLabel(d){
   var e=d.edit,name=(e.name||'').trim();
   if(!name){e.err='Nhập tên nhãn.';renderSheet();return;}
   if(labels().some(function(l){return l.id!==e.id&&l.name.toLowerCase()===name.toLowerCase();})){e.err='Đã có nhãn tên này.';renderSheet();return;}
-  if(e.id){var l=getLabel(e.id);l.name=name;l.color=e.color;l.icon=e.icon;}
-  else{var nid='l'+uid();labels().push({id:nid,name:name,color:e.color,icon:e.icon});var below=stack[stack.length-2];if(below&&below.d.label!==undefined)below.d.label=nid;}
+  if(e.id){var l=getLabel(e.id);l.name=name;l.color=e.color;l.emoji=e.emoji;}
+  else{var nid='l'+uid();labels().push({id:nid,name:name,color:e.color,emoji:e.emoji||guessEmoji(name)});var below=stack[stack.length-2];if(below&&below.d.label!==undefined)below.d.label=nid;}
   d.edit=null;mark('settings');render();
 }
 function delLabel(d){var e=d.edit;d.edit=null;removeItem('label',e.id);}
@@ -1801,12 +1812,12 @@ document.addEventListener('click',function(ev){
   case 'pack-sug':var ts=getEv(d.id);if(ts){ts.pack=ts.pack||[];ts.pack.push({id:uid(),t:v,d:false});mark('events');render();}break;
   case 'label-new':
     var used=labels().map(function(l){return l.color;});
-    d.edit={id:'',name:'',icon:'star',color:(COLORS.filter(function(c){return used.indexOf(c[0])<0;})[0]||COLORS[0])[0],err:'',confirm:false};
+    d.edit={id:'',name:'',emoji:'⭐',color:(COLORS.filter(function(c){return used.indexOf(c[0])<0;})[0]||COLORS[0])[0],err:'',confirm:false};
     renderSheet();var ln=document.getElementById('f-lname');if(ln)ln.focus();break;
-  case 'label-edit':var L=getLabel(id);d.edit={id:L.id,name:L.name,color:L.color,icon:labelIcon(L),err:'',confirm:false};renderSheet();break;
+  case 'label-edit':var L=getLabel(id);d.edit={id:L.id,name:L.name,color:L.color,emoji:labelEmoji(L),err:'',confirm:false};renderSheet();break;
   case 'label-delrow':d.edit=null;removeItem('label',id);break;
   case 'label-color':d.edit.color=v;renderSheet();break;
-  case 'label-icon':d.edit.icon=v;renderSheet();break;
+  case 'label-emoji':d.edit.emoji=v;renderSheet();break;
   case 'label-cancel':d.edit=null;renderSheet();break;
   case 'label-save':saveLabel(d);break;
   case 'label-del':delLabel(d);break;
@@ -1822,6 +1833,7 @@ document.getElementById('sheet').addEventListener('click',function(e){if(e.targe
 document.addEventListener('keydown',function(e){if(e.key==='Escape'&&stack.length)closeSheet();});
 function onField(e){
   var el=e.target,t=top();
+  if(el.id==='f-lemoji'){var tt=top();if(tt&&tt.d.edit){var g=firstGlyph(el.value);if(g){tt.d.edit.emoji=g;if(e.type==='change'){renderSheet();}else{var pv=el.parentNode.querySelector('.stk .em');if(pv)pv.textContent=g;}}}return;}
   if(el.id==='f-pet'){if(e.type==='change'){S.settings.petName=el.value.trim()||'Xu';mark('settings');renderMain();}return;}
   if(el.id==='note-q'){ui.q=el.value;var pos=el.selectionStart;renderMain();var n=document.getElementById('note-q');if(n){n.focus();try{n.setSelectionRange(pos,pos);}catch(x){}}return;}
   if(!t)return;var d=t.d;
