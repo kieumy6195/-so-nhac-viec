@@ -395,10 +395,11 @@ body{background-color:var(--bg);background-image:radial-gradient(var(--dot) 1.1p
 .bloc-wd{font-weight:700;font-size:14px}
 .bloc-lun{font-size:11.5px;color:var(--muted);line-height:1.35;border-top:1px dashed var(--rule);padding-top:5px;margin:5px 10px 0}
 .xu{display:flex;flex-direction:column;align-items:flex-end;min-width:0}
-.bubble{position:relative;align-self:stretch;background:var(--paper);border:1.5px solid var(--fg);border-radius:18px;padding:9px 13px;box-shadow:3px 3px 0 var(--fg);margin-bottom:6px}
+.bubble{position:relative;align-self:stretch;background:var(--paper);border:1.5px solid var(--fg);border-radius:18px;padding:8px 13px;box-shadow:3px 3px 0 var(--fg);margin-bottom:6px;height:104px;display:flex;flex-direction:column;justify-content:center;overflow:hidden}
 .bubble::after{content:"";position:absolute;right:40px;bottom:-8.5px;width:14px;height:14px;background:var(--paper);border-right:1.5px solid var(--fg);border-bottom:1.5px solid var(--fg);transform:rotate(45deg)}
-.bubble b{display:block;font-family:var(--hand);font-size:18px;font-weight:400;line-height:1.2}
-.bubble span{display:block;font-size:13px;color:var(--muted);margin-top:2px}
+.bubble b{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-family:var(--hand);font-size:17px;font-weight:400;line-height:1.2;flex:none}
+.bubble span{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;font-size:13px;line-height:1.35;color:var(--muted);margin-top:2px;flex:none}
+.xu-stage{height:112px}
 .xu .mitbtn{margin-right:12px}
 /* diary & notes on paper */
 .de{background:var(--paper);border:1px solid var(--rule);border-left:4px double color-mix(in srgb,var(--late) 50%,transparent);border-radius:6px 12px 12px 6px;background-image:repeating-linear-gradient(to bottom,transparent 0 25px,var(--rule) 25px 26px);background-position:0 8px;box-shadow:0 12px 20px -16px rgba(70,30,45,.55)}
@@ -1339,7 +1340,7 @@ function renderSheet(){
       '<button type="button" class="btn w" data-act="open-labels">Quản lý nhãn</button>'+
       '<div class="box"><b>Sao lưu dữ liệu</b><p class="hint">Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng hãy xuất một bản sao lưu (lưu vào Tệp hoặc gửi cho chính bạn) để không bị mất khi đổi máy.</p>'+(S.settings.lastBackup?'<p class="hint">Lần sao lưu gần nhất: '+esc(S.settings.lastBackup)+'</p>':'')+'<div class="acts"><button type="button" class="btn main" data-act="export">Xuất bản sao lưu</button><label class="btn" for="f-import" style="cursor:pointer">Khôi phục</label><input id="f-import" type="file" accept="application/json,.json" hidden></div>'+(d.importErr?'<p class="err" role="alert">'+esc(d.importErr)+'</p>':'')+'</div>'+
       '<div class="box"><b>Về nhắc nhở</b><p class="hint">App hiện thông báo khi đến giờ nếu app đang mở. Để điện thoại reo chuông cả khi khoá màn hình, hãy đặt thêm trong app Lời nhắc của iPhone.</p></div>'+
-      '<p class="hint" style="text-align:center">Phiên bản 3.1 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
+      '<p class="hint" style="text-align:center">Phiên bản 3.2 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
     break;
   }
   document.getElementById('panel').innerHTML=h;
