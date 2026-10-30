@@ -100,6 +100,22 @@ h1,h2,h3,p{margin:0}
 .c-bar.trip{background:color-mix(in srgb,var(--c) 48%,var(--surface))}
 .c-n,.c-lun,.c-top{position:relative;z-index:1}
 .c-more{font-size:9.5px;color:var(--muted);padding-left:3px}
+.c-hol{font-size:13px;line-height:1;font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif;margin-left:auto}
+.c-top .c-hol+svg{margin-left:2px}
+.cell.off .c-n{color:var(--late)}
+.hol-l{margin-top:4px;font-size:14px;font-weight:600;color:var(--fg);display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.hol-l .em,.wh .em{font-family:'Apple Color Emoji','Segoe UI Emoji','Noto Color Emoji',sans-serif}
+.offtag{font-size:11.5px;font-weight:700;color:#fff;background:var(--late);border-radius:999px;padding:2px 8px}
+.wi.wh{color:var(--late);font-weight:600;cursor:default}
+.moved{color:var(--a);font-weight:600}
+.mvgrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px}
+.mvd{display:flex;flex-direction:column;align-items:center;padding:6px 0;border-radius:12px;border:1.5px solid var(--rule);background:var(--paper);line-height:1.15}
+.mvd small{font-size:10.5px;color:var(--muted)}
+.mvd b{font-family:var(--hand);font-weight:400;font-size:18px}
+.mvd.orig{border-style:dashed}
+.mvd.has{opacity:.45}
+.mvd[aria-pressed="true"]{background:var(--a);border-color:var(--a);color:var(--on-a)}
+.mvd[aria-pressed="true"] small{color:var(--on-a)}
 .stk{--sz:22px;width:var(--sz);height:var(--sz);border-radius:50%;background:var(--c);color:var(--on-a);display:inline-grid;place-items:center;flex:none;box-shadow:0 0 0 2px #fff,0 2px 3px 1px rgba(60,30,40,.3);transform:rotate(var(--r,0deg))}
 .stk svg{width:60%;height:60%}
 .stk.emo{background:color-mix(in srgb,var(--c) 24%,#fff);box-shadow:inset 0 0 0 1.5px var(--c),0 0 0 2px #fff,0 2px 3px 1px rgba(60,30,40,.3)}
@@ -604,7 +620,7 @@ var WD_S=['CN','T2','T3','T4','T5','T6','T7'];
 var WD_L=['Chủ nhật','Thứ Hai','Thứ Ba','Thứ Tư','Thứ Năm','Thứ Sáu','Thứ Bảy'];
 var WEEK=[1,2,3,4,5,6,0];
 var REMIND=[['','Không nhắc'],['0','Đúng giờ'],['5','Trước 5 phút'],['15','Trước 15 phút'],['30','Trước 30 phút'],['60','Trước 1 giờ'],['1440','Trước 1 ngày']];
-var EV_REP=[['none','Không lặp'],['daily','Mỗi ngày'],['weekly','Mỗi tuần'],['monthly','Mỗi tháng'],['yearly','Mỗi năm']];
+var EV_REP=[['none','Không lặp'],['daily','Mỗi ngày'],['weekly','Mỗi tuần'],['monthly','Mỗi tháng'],['yearly','Mỗi năm'],['lunar','Mỗi năm (âm lịch)']];
 var TD_REP=[['none','Không lặp'],['daily','Mỗi ngày'],['weekly','Mỗi tuần'],['monthly','Mỗi tháng']];
 var CAN=['Giáp','Ất','Bính','Đinh','Mậu','Kỷ','Canh','Tân','Nhâm','Quý'];
 var CHI=['Tý','Sửu','Dần','Mão','Thìn','Tỵ','Ngọ','Mùi','Thân','Dậu','Tuất','Hợi'];
@@ -705,6 +721,8 @@ function heroState(){
   var tds=S.todos.filter(function(t){return !t.done&&t.due&&t.due<=today;}).length;
   var late=S.todos.filter(function(t){return !t.done&&t.due&&t.due<today;}).length;
   if(hh>=23||hh<5)return {pose:'nap',t:'Khuya rồi đó…',s:nm+' đang mơ thấy cá. Bạn cũng ngủ sớm nha!'};
+  var hdy=holidayOf(today);
+  if(hdy&&!(hh>=23||hh<5)&&!pend.some(function(x){return (x.times||[]).some(function(tm,i){return i>=hCount(x,today)&&tm<=hm;});}))return {pose:hdy.off?'feast':'covet',t:hdy.e+' '+hdy.n+'!',s:hdy.off?'Hôm nay được nghỉ lễ, '+nm+' chúc bạn chơi thật vui.':nm+' chúc bạn một ngày thật vui nha.'};
   if(tr&&tr.start<=today)return {pose:'walk',t:'Đang đi '+(tr.place||tr.title)+'!',s:'Ngày '+(diffDays(tr.start,today)+1)+'/'+(diffDays(tr.start,evEnd(tr))+1)+'. Nhớ mua quà cho '+nm+' nha.'};
   if(hb.length&&!pend.length)return {pose:'feast',t:'Xong hết thói quen hôm nay!',s:nm+' ăn mừng bằng một bữa thật no.'};
   var medP=pend.filter(function(x){return x.icon==='pill'||x.icon==='paw';});
@@ -917,8 +935,12 @@ function connect(){
 }
 
 /* ================= domain logic ================= */
+function movedTo(ev,ds){if(!ev.moves)return null;for(var k in ev.moves){if(ev.moves[k]&&ev.moves[k].d===ds&&!(ev.skip&&ev.skip.indexOf(k)>=0))return k;}return null;}
 function evOn(ev,ds){
-  if(!ev.start||ds<ev.start)return false;
+  if(!ev.start)return false;
+  if(movedTo(ev,ds))return true;
+  if(ds<ev.start)return false;
+  if(ev.moves&&ev.moves[ds])return false;
   if(ev.skip&&ev.skip.indexOf(ds)>=0)return false;
   if(ev.repeat!=='none'&&ev.until&&ds>ev.until)return false;
   switch(ev.repeat){
@@ -927,14 +949,28 @@ function evOn(ev,ds){
     case 'weekly':return (ev.days&&ev.days.length?ev.days:[dowOf(ev.start)]).indexOf(dowOf(ds))>=0;
     case 'monthly':return parse(ds).getDate()===parse(ev.start).getDate();
     case 'yearly':return ds.slice(5)===ev.start.slice(5);
+    case 'lunar':var la=lunarOf(ds),lb=lunarOf(ev.start);return !la[3]&&la[0]===lb[0]&&la[1]===lb[1];
   }
   return false;
+}
+var HOL_SOLAR={'01-01':['🎆','Tết Dương lịch',1],'02-14':['💝','Lễ Tình nhân',0],'03-08':['🌸','Quốc tế Phụ nữ',0],'04-30':['🇻🇳','Giải phóng miền Nam',1],'05-01':['🛠️','Quốc tế Lao động',1],'06-01':['🎈','Quốc tế Thiếu nhi',0],'07-27':['🕯️','Thương binh Liệt sĩ',0],'09-02':['🇻🇳','Quốc khánh',1],'10-20':['💐','Phụ nữ Việt Nam',0],'11-20':['📚','Nhà giáo Việt Nam',0],'12-22':['🎖️','Quân đội Nhân dân',0],'12-24':['🎄','Đêm Giáng sinh',0],'12-25':['🎄','Giáng sinh',0]};
+var HOL_LUNAR={'1-1':['🧧','Mùng 1 Tết',1],'1-2':['🧧','Mùng 2 Tết',1],'1-3':['🧧','Mùng 3 Tết',1],'1-15':['🏮','Rằm tháng Giêng',0],'3-10':['👑','Giỗ Tổ Hùng Vương',1],'4-15':['🪷','Lễ Phật Đản',0],'5-5':['🍑','Tết Đoan Ngọ',0],'7-15':['🙏','Lễ Vu Lan',0],'8-15':['🏮','Tết Trung Thu',0],'12-23':['🐟','Ông Công Ông Táo',0]};
+var holCache={};
+function holidayOf(ds){
+  if(holCache[ds]!==undefined)return holCache[ds];
+  var r=null,h=HOL_SOLAR[ds.slice(5)];
+  if(h)r={e:h[0],n:h[1],off:!!h[2]};
+  var l=lunarOf(ds);
+  if(!l[3]){var hl=HOL_LUNAR[l[1]+'-'+l[0]];if(hl)r={e:hl[0],n:hl[1],off:!!hl[2],lun:l[0]+'/'+l[1]};}
+  if(!r){var nx=lunarOf(addDays(ds,1));if(nx[0]===1&&nx[1]===1&&!nx[3])r={e:'🎊',n:'Giao thừa',off:1};}
+  if(S.settings.holidays===false)r=null;
+  holCache[ds]=r;return r;
 }
 function evEnd(e){return e.repeat==='none'&&e.endDate&&e.endDate>e.start?e.endDate:e.start;}
 function isMulti(e){return evEnd(e)!==e.start;}
 function getEv(id){return S.events.filter(function(x){return x.id===id;})[0];}
 function eventsOn(ds){
-  return S.events.filter(function(e){return evOn(e,ds);}).sort(function(a,b){
+  return S.events.filter(function(e){return evOn(e,ds);}).map(function(e){var k=movedTo(e,ds);if(!k)return e;var c=Object.assign({},e);c._from=k;if(e.moves[k].t)c.time=e.moves[k].t;return c;}).sort(function(a,b){
     var ma=isMulti(a)?0:1,mb=isMulti(b)?0:1;if(ma!==mb)return ma-mb;if(!ma)return a.start.localeCompare(b.start)||a.id.localeCompare(b.id);
     if(a.allDay!==b.allDay)return a.allDay?-1:1;
     return (a.time||'').localeCompare(b.time||'')||a.title.localeCompare(b.title,'vi');
@@ -943,6 +979,7 @@ function eventsOn(ds){
 function todosOn(ds){return S.todos.filter(function(t){return t.due===ds;});}
 function repName(rep,days){
   if(rep==='weekly'&&days&&days.length&&days.length<7)return WEEK.filter(function(w){return days.indexOf(w)>=0;}).map(function(w){return WD_S[w];}).join(', ');
+  if(rep==='lunar')return 'Mỗi năm âm lịch';
   var all=EV_REP.filter(function(r){return r[0]===rep;})[0];return all?all[1]:'';
 }
 function nextDue(due,rep){
@@ -1046,8 +1083,8 @@ function monthGrid(){
     var bars=items.filter(function(x){return x.m;}),sts=items.filter(function(x){return !x.m;});
     var lun='';
     if(S.settings.lunar){var l=lunarOf(ds);lun='<span class="c-lun'+(l[0]===1?' m1':'')+'">'+(l[0]===1?'1/'+l[1]+(l[3]?'N':''):l[0])+'</span>';}
-    var mood=S.diary[ds]?moodFace(S.diary[ds].mood,15):'';
-    var cls='cell'+(dt.getMonth()!==ui.m?' out':'')+(ds===today?' today':'')+(ds===ui.sel?' sel':'')+(dt.getDay()===0?' sun':'');
+    var mood=S.diary[ds]?moodFace(S.diary[ds].mood,15):'';var hol=holidayOf(ds);if(hol)mood='<span class="c-hol" title="'+esc(hol.n)+'">'+hol.e+'</span>'+mood;
+    var cls='cell'+(hol&&hol.off?' off':'')+(dt.getMonth()!==ui.m?' out':'')+(ds===today?' today':'')+(ds===ui.sel?' sel':'')+(dt.getDay()===0?' sun':'');
     var aria=dt.getDate()+' tháng '+(dt.getMonth()+1)+(items.length?', '+items.length+' mục':'');
     h+='<button type="button" class="'+cls+'" data-act="pick-day" data-d="'+ds+'" aria-label="'+esc(aria)+'"'+(ds===ui.sel?' aria-current="date"':'')+'>'+
       '<span class="c-top"><span class="c-n">'+dt.getDate()+'</span>'+mood+'</span>'+lun+'<span class="c-items">'+
@@ -1066,6 +1103,8 @@ function evRow(e,ds){
   if(e.trip){var pl=(e.plan&&e.plan[ds])||[];meta+='<span>'+(pl.length?pl.length+' hoạt động':'Chưa có lịch trình')+'</span>';}
   else if(m)meta+='<span>'+esc(dShort(e.start).split(', ')[1]+' – '+dShort(en).split(', ')[1])+'</span>';
   if(e.repeat!=='none')meta+='<span>'+svg(P.rep,13)+' '+esc(repName(e.repeat,e.days))+'</span>';
+  if(e._from)meta+='<span class="moved">Dời từ '+esc(dShort(e._from))+'</span>';
+  if(e.byear){var age=+ds.slice(0,4)-(+e.byear);if(age>0)meta+='<span class="moved">Tròn '+age+' tuổi</span>';}
   if(e.remind!=null&&!e.trip)meta+='<span>'+svg(P.bell,13)+'</span>';
   return '<li class="swr" data-swipe="event" data-lp="event" data-id="'+esc(e.id)+'" data-d="'+ds+'"><div class="swr-bg">'+(e.repeat!=='none'?'Bỏ ngày này':'Xoá')+'</div>'+
     '<button type="button" class="ev swr-fg col-'+lb.color+'" data-act="'+(e.trip?'open-trip':'edit-event')+'" data-id="'+esc(e.id)+'" data-d="'+ds+'">'+
@@ -1092,6 +1131,7 @@ function dayPanel(ds){
   var evs=eventsOn(ds),tds=todosOn(ds),hbs=habitsOn(ds),di=S.diary[ds];
   var lunTxt='';
   if(S.settings.lunar){var l=lunarOf(ds);lunTxt='<p class="lun-l">Âm lịch: ngày '+l[0]+' tháng '+l[1]+(l[3]?' nhuận':'')+', năm '+canChi(l[2])+'</p>';}
+  var hd=holidayOf(ds);if(hd)lunTxt+='<p class="hol-l"><span class="em">'+hd.e+'</span> '+esc(hd.n)+(hd.off?' <span class="offtag">Nghỉ lễ</span>':'')+'</p>';
   var h='<section class="card tape" aria-label="Chi tiết ngày"><div class="day-h"><div><h2 class="h2">'+esc(ds===today?'Hôm nay, '+dLong(ds).split(', ')[1]:dLong(ds))+'</h2>'+lunTxt+'</div><button type="button" class="pill sm" data-act="add-menu">+ Thêm</button></div>';
   if(evs.length){h+='<p class="sec-t">Sự kiện</p><ul class="list">'+evs.map(function(e){return evRow(e,ds);}).join('')+'</ul>';
     if(ds<=today){var gh=[];evs.forEach(function(e){(S.books||[]).forEach(function(bk){if(bk.label&&bk.label===e.label&&!e.trip&&!(bk.entries||[]).some(function(x){return x.evId===e.id&&x.date===ds;}))gh.push('<button type="button" class="chip c col-'+bk.color+'" data-act="entry-from-ev" data-id="'+esc(bk.id)+'" data-d="'+ds+'" data-v="'+esc(e.id)+'">+ Ghi '+esc(e.title)+' vào '+esc(bk.name)+'</button>');});});if(gh.length)h+='<div class="wrap ghi">'+gh.join('')+'</div>';}}
@@ -1105,8 +1145,8 @@ function dayPanel(ds){
   return h+'</section>';
 }
 function weekLine(ds){
-  var evs=eventsOn(ds),tds=todosOn(ds).filter(function(t){return !t.done;});
-  var items=evs.map(function(e){return '<button type="button" class="wi col-'+getLabel(e.label).color+'" data-act="'+(e.trip?'open-trip':'edit-event')+'" data-lp="event" data-id="'+esc(e.id)+'" data-d="'+ds+'">'+stk(getLabel(e.label),'xs')+'<span class="wi-time">'+(e.trip?'Chuyến đi':isMulti(e)?'Nhiều ngày':e.allDay?'Cả ngày':esc(e.time))+'</span><span class="wi-t">'+esc(e.title)+'</span></button>';})
+  var evs=eventsOn(ds),tds=todosOn(ds).filter(function(t){return !t.done;}),hd=holidayOf(ds);
+  var items=(hd?['<span class="wi wh"><span class="em">'+hd.e+'</span><span class="wi-t">'+esc(hd.n)+(hd.off?' · nghỉ':'')+'</span></span>']:[]).concat(evs.map(function(e){return '<button type="button" class="wi col-'+getLabel(e.label).color+'" data-act="'+(e.trip?'open-trip':'edit-event')+'" data-lp="event" data-id="'+esc(e.id)+'" data-d="'+ds+'">'+stk(getLabel(e.label),'xs')+'<span class="wi-time">'+(e.trip?'Chuyến đi':isMulti(e)?'Nhiều ngày':e.allDay?'Cả ngày':esc(e.time))+'</span><span class="wi-t">'+esc(e.title)+'</span></button>';}))
     .concat(tds.map(function(t){return '<button type="button" class="wi col-'+getLabel(t.label).color+'" data-act="edit-todo" data-id="'+esc(t.id)+'"><i class="sq"></i><span class="wi-time">'+(t.time?esc(t.time):'Việc')+'</span><span class="wi-t">'+esc(t.title)+'</span></button>';}));
   return items;
 }
@@ -1247,7 +1287,7 @@ function renderSheet(){
   if(d.label!==undefined&&t.type!=='bookEdit'&&!hasLabel(d.label))d.label=labels()[0].id;
   switch(t.type){
   case 'menu':
-    var mis=[['new-event','Sự kiện','Tập tennis, lịch khám',P.cal],['new-todo','Việc cần làm','Việc có hạn, việc con',P.todo],['new-habit','Thói quen','Uống thuốc mỗi ngày',P.habit],['new-diary','Nhật ký','Tâm trạng hôm nay',P.diary],['new-trip','Chuyến đi','Lịch trình nhiều ngày, đồ mang theo',P.trip]];
+    var mis=[['new-event','Sự kiện','Tập tennis, lịch khám',P.cal],['new-todo','Việc cần làm','Việc có hạn, việc con',P.todo],['new-habit','Thói quen','Uống thuốc mỗi ngày',P.habit],['new-diary','Nhật ký','Tâm trạng hôm nay',P.diary],['new-trip','Chuyến đi','Lịch trình nhiều ngày, đồ mang theo',P.trip],['new-bday','Sinh nhật','Lặp hằng năm, âm hoặc dương lịch',HICON.cake]];
     mis.sort(function(a,b){return (b[0]===ui.last?1:0)-(a[0]===ui.last?1:0);});
     h=head('Thêm mới')+'<p class="hint">Cho ngày '+esc(dLong(ui.sel))+'</p><div class="menu">'+
       mis.map(function(x){return '<button type="button" class="mi" data-act="'+x[0]+'">'+(x[0]===ui.last?'<span class="recent">Gần đây</span>':'')+svg(x[3],26)+'<b>'+x[1]+'</b><span>'+x[2]+'</span></button>';}).join('')+'</div>';
@@ -1261,11 +1301,13 @@ function renderSheet(){
       (d.allDay?'':'<div class="field"><label class="lbl" for="f-time">'+(d.multi?'Giờ bắt đầu':'Từ')+'</label><input id="f-time" data-f="time" type="time" value="'+esc(d.time)+'"></div><div class="field"><label class="lbl" for="f-end">'+(d.multi?'Giờ kết thúc (ngày cuối)':'Đến (tuỳ chọn)')+'</label><input id="f-end" data-f="end" type="time" value="'+esc(d.end)+'"></div>')+'</div>'+
       (d.multi?'':'<div class="field"><span class="lbl">Lặp lại</span>'+chipsSet('repeat',EV_REP,d.repeat)+'</div>')+
       (d.repeat==='weekly'?'<div class="field"><span class="lbl">Vào các ngày</span>'+dayToggles(d.days)+'</div>':'')+
+      (d.repeat==='lunar'&&d.start?'<p class="hint">Lặp vào ngày '+lunarOf(d.start)[0]+'/'+lunarOf(d.start)[1]+' âm lịch hằng năm.</p>':'')+
+      (d.bday||d.byear!==undefined&&d.byear!==''?'<div class="field"><label class="lbl" for="f-byear">Năm sinh (tuỳ chọn, để hiện tuổi)</label><input id="f-byear" data-f="byear" type="number" inputmode="numeric" min="1900" max="2100" value="'+esc(d.byear||'')+'" placeholder="Ví dụ 1965"></div>':'')+
       (d.repeat!=='none'?'<div class="field"><label class="lbl" for="f-until">Lặp đến ngày (tuỳ chọn)</label><input id="f-until" data-f="until" type="date" value="'+esc(d.until)+'"></div>':'')+
       '<div class="field"><label class="lbl" for="f-remind">Nhắc nhở</label><select id="f-remind" data-f="remind">'+REMIND.map(function(r){return '<option value="'+r[0]+'"'+(String(d.remind==null?'':d.remind)===r[0]?' selected':'')+'>'+r[1]+'</option>';}).join('')+'</select></div>'+
       '<div class="field"><label class="lbl" for="f-note">Ghi chú</label><textarea id="f-note" data-f="note" maxlength="500" placeholder="Địa điểm, đồ cần mang…">'+esc(d.note)+'</textarea></div>'+errBox(d)+
       '<div class="acts"><button type="button" class="btn main" data-act="save-event">Lưu</button>'+
-      (d.id?(d.repeat!=='none'&&d.occ?delBtn(d,'del-occ','Bỏ ngày này'):'')+delBtn(d,'del-event',d.repeat!=='none'?'Xoá cả chuỗi':'Xoá'):'')+'</div>';
+      (d.id?(d.repeat!=='none'&&d.occ?'<button type="button" class="btn" data-act="move-occ-ed">Dời buổi này</button>'+delBtn(d,'del-occ','Bỏ ngày này'):'')+delBtn(d,'del-event',d.repeat!=='none'?'Xoá cả chuỗi':'Xoá'):'')+'</div>';
     break;
   case 'todo':
     h=head(d.id?'Sửa việc':'Việc mới')+
@@ -1336,6 +1378,14 @@ function renderSheet(){
       }).join('')+errBox(d)+
       '<div class="acts"><button type="button" class="btn main" data-act="save-entry">Lưu vào sổ</button>'+(d.id?'<button type="button" class="btn del" data-act="del-entry">Xoá trang</button>':'')+'</div>';
     break;
+  case 'moveOcc':
+    var me=getEv(d.id);if(!me){h=head('Dời buổi');break;}
+    var ws=weekStartOf(d.from),opts=[];for(var wi=-7;wi<14;wi++){var od=addDays(ws,wi);if(od>=addDays(today,-1)||od===d.from)opts.push(od);}
+    h=head('Dời buổi này')+'<p class="hint">'+esc(me.title)+' · buổi gốc '+esc(dLong(d.from))+'. Chỉ dời riêng buổi này, các buổi khác giữ nguyên lịch.</p>'+
+      '<div class="field"><span class="lbl">Dời sang</span><div class="mvgrid">'+opts.slice(0,21).map(function(od){var pd=parse(od);return '<button type="button" class="mvd'+(od===d.from?' orig':'')+(evOn(me,od)&&od!==d.from&&od!==d.to?' has':'')+'" data-act="mv-pick" data-v="'+od+'" aria-pressed="'+(d.to===od)+'"><small>'+WD_S[pd.getDay()]+'</small><b>'+pd.getDate()+'</b><small>th '+(pd.getMonth()+1)+'</small></button>';}).join('')+'</div></div>'+
+      '<div class="two"><div class="field"><label class="lbl" for="f-mvto">Hoặc chọn ngày</label><input id="f-mvto" data-f="to" type="date" value="'+esc(d.to)+'"></div>'+(d.allDay?'':'<div class="field"><label class="lbl" for="f-mvt">Giờ</label><input id="f-mvt" data-f="time" type="time" value="'+esc(d.time)+'"></div>')+'</div>'+errBox(d)+
+      '<div class="acts"><button type="button" class="btn main" data-act="save-move">Dời sang '+esc(d.to?dShort(d.to):'…')+'</button>'+(me.moves&&me.moves[d.from]?'<button type="button" class="btn" data-act="mv-reset">Về ngày gốc</button>':'')+'</div>';
+    break;
   case 'actions':
     var it=axItem(d);if(!it){h=head('Không còn mục này');break;}
     h=head(esc(it.title))+'<div class="axl">'+it.acts.map(function(a){return '<button type="button" class="axb'+(a[0]==='del'?' del':'')+'" data-act="ax" data-v="'+a[0]+'">'+svg(a[2],20)+esc(a[1])+'</button>';}).join('')+'</div>';
@@ -1381,11 +1431,12 @@ function renderSheet(){
       '<div class="field"><span class="lbl">Màu chủ đề</span><div class="wrap">'+THEMES.map(function(x){return '<button type="button" role="radio" class="th" style="background:'+x[2]+'" data-act="set-theme" data-v="'+x[0]+'" aria-checked="'+(S.settings.theme===x[0])+'" aria-label="'+x[1]+'"></button>';}).join('')+'</div></div>'+
       '<div class="field"><span class="lbl">Giao diện</span><div class="seg" role="radiogroup" aria-label="Giao diện">'+[['auto','Tự động'],['light','Sáng'],['dark','Tối']].map(function(x){return '<button type="button" role="radio" data-act="set-mode" data-v="'+x[0]+'" aria-pressed="'+((S.settings.mode||'auto')===x[0])+'" aria-checked="'+((S.settings.mode||'auto')===x[0])+'">'+x[1]+'</button>';}).join('')+'</div><span class="hint">Tự động: đổi theo cài đặt sáng/tối của iPhone.</span></div>'+
       sw('lunar',S.settings.lunar,'Hiện âm lịch trên lịch')+
+      '<div class="sw-row"><span id="sw-hol">Hiện ngày lễ Việt Nam</span><button type="button" class="switch" role="switch" data-act="toggle-hol" aria-checked="'+(S.settings.holidays!==false)+'" aria-labelledby="sw-hol"></button></div>'+
       '<div class="field"><label class="lbl" for="f-pet">Tên bé mèo</label><div class="trow">'+mit({s:52,pose:'front',fx:false})+'<input id="f-pet" type="text" maxlength="20" value="'+esc(petName())+'"></div></div>'+
       '<button type="button" class="btn w" data-act="open-labels">Quản lý nhãn</button>'+
       '<div class="box"><b>Sao lưu dữ liệu</b><p class="hint">Dữ liệu chỉ nằm trên máy này. Thỉnh thoảng hãy xuất một bản sao lưu (lưu vào Tệp hoặc gửi cho chính bạn) để không bị mất khi đổi máy.</p>'+(S.settings.lastBackup?'<p class="hint">Lần sao lưu gần nhất: '+esc(S.settings.lastBackup)+'</p>':'')+'<div class="acts"><button type="button" class="btn main" data-act="export">Xuất bản sao lưu</button><label class="btn" for="f-import" style="cursor:pointer">Khôi phục</label><input id="f-import" type="file" accept="application/json,.json" hidden></div>'+(d.importErr?'<p class="err" role="alert">'+esc(d.importErr)+'</p>':'')+'</div>'+
       '<div class="box"><b>Về nhắc nhở</b><p class="hint">App hiện thông báo khi đến giờ nếu app đang mở. Để điện thoại reo chuông cả khi khoá màn hình, hãy đặt thêm trong app Lời nhắc của iPhone.</p></div>'+
-      '<p class="hint" style="text-align:center">Phiên bản 3.4 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
+      '<p class="hint" style="text-align:center">Phiên bản 3.5 · Sổ tay của Xu</p>'+'<button type="button" class="btn del w" data-act="wipe">'+(d.confirm==='wipe'?'Bấm lần nữa để xoá toàn bộ dữ liệu':'Xoá toàn bộ dữ liệu')+'</button>';
     break;
   }
   document.getElementById('panel').innerHTML=h;
@@ -1573,7 +1624,7 @@ function removeItem(kind,id,ds,pid){
   switch(kind){
   case 'event':
     e=getEv(id);if(!e)return;
-    if(e.repeat!=='none'&&ds){withUndo(['events'],'Đã bỏ '+q(e.title)+' ngày '+dShort(ds).split(', ')[1],function(){e.skip=(e.skip||[]).concat([ds]);});return;}
+    if(e.repeat!=='none'&&ds){var mk=movedTo(e,ds)||ds;withUndo(['events'],'Đã bỏ '+q(e.title)+' ngày '+dShort(ds).split(', ')[1],function(){e.skip=(e.skip||[]).concat([mk]);if(e.moves&&e.moves[mk])delete e.moves[mk];});return;}
     /* falls through */
   case 'eventAll':
     e=getEv(id);if(!e)return;
@@ -1617,7 +1668,7 @@ function axItem(d){
   if(k==='event'){x=getEv(id);if(!x)return null;
     if(x.trip)return {title:x.title,acts:[['open','Mở chuyến đi',P.trip],['edit','Sửa thông tin',P.edit],['tomorrow','Dời cả chuyến lùi 1 ngày',P.next],['del','Xoá chuyến đi',P.del]]};
     var a=[['edit','Sửa',P.edit],['dup','Nhân bản',P.copy]];
-    if(x.repeat==='none')a.push(['tomorrow','Dời sang ngày hôm sau',P.next]);else a.push(['skip','Bỏ ngày này',P.x]);
+    if(x.repeat==='none')a.push(['tomorrow','Dời sang ngày hôm sau',P.next]);else{a.push(['move','Dời buổi này sang ngày khác',P.next]);a.push(['skip','Bỏ ngày này',P.x]);}
     a.push(['del',x.repeat!=='none'?'Xoá cả chuỗi':'Xoá',P.del]);return {title:x.title,acts:a};}
   if(k==='todo'){x=S.todos.filter(function(t){return t.id===id;})[0];if(!x)return null;
     return {title:x.title,acts:[['edit','Sửa',P.edit],['dup','Nhân bản',P.copy],['tomorrow',x.due?'Dời sang ngày hôm sau':'Đặt hạn ngày mai',P.next],['pin',x.pinned?'Bỏ ghim':'Ghim lên đầu',P.pin],['del','Xoá',P.del]]};}
@@ -1631,6 +1682,7 @@ function doAx(d,v){
   var k=d.kind,id=d.id,ds=d.d,x;closeAll();
   if(v==='del')return removeItem(k==='event'?'eventAll':k,id,ds);
   if(v==='skip')return removeItem('event',id,ds);
+  if(v==='move')return openMove(id,ds);
   if(k==='event'){x=getEv(id);if(!x)return;
     if(v==='open')return openTrip(id);
     if(v==='edit')return x.trip?editTrip(id):editEvent(id,ds);
@@ -1653,6 +1705,22 @@ function doAx(d,v){
 }
 function openActions(el){if(el.getAttribute('data-lp')==='xu'){petXu();return;}openSheet('actions',{kind:el.getAttribute('data-lp'),id:el.getAttribute('data-id'),d:el.getAttribute('data-d')});}
 
+/* ---- move one occurrence ---- */
+function openMove(id,ds){var e=getEv(id);if(!e)return;var from=movedTo(e,ds)||ds;var cur=e.moves&&e.moves[from];openSheet('moveOcc',{id:id,from:from,to:cur?cur.d:ds,time:(cur&&cur.t)||e.time||'',allDay:e.allDay});}
+function saveMove(d){
+  var e=getEv(d.id);if(!e)return closeAll();
+  if(!d.to)return fail(d,'Chọn ngày mới.');
+  var same=d.to===d.from&&(d.allDay||!d.time||d.time===e.time);
+  closeAll();
+  withUndo(['events'],same?'Đã trả '+q(e.title)+' về ngày cũ':'Đã dời '+q(e.title)+' sang '+dShort(d.to),function(){
+    e.moves=e.moves||{};
+    if(same)delete e.moves[d.from];else e.moves[d.from]={d:d.to,t:(!d.allDay&&d.time&&d.time!==e.time)?d.time:''};
+  });
+  jumpTo(d.to);render();
+}
+function ensureBdayLabel(){var l=labels().filter(function(x){return /sinh nhật/i.test(x.name);})[0];if(l)return l.id;var nl={id:'bday',name:'Sinh nhật',color:'rose',emoji:'🎂'};labels().push(nl);mark('settings');return nl.id;}
+function newBday(){var lid=ensureBdayLabel();openSheet('event',{title:'',label:lid,allDay:true,multi:false,start:ui.sel,endDate:addDays(ui.sel,1),time:'09:00',end:'',repeat:'yearly',days:[dowOf(ui.sel)],until:'',remind:'1440',note:'',bday:true,byear:''});}
+
 /* ---- savers ---- */
 function saveEvent(d){
   if(d.multi)d.repeat='none';
@@ -1665,7 +1733,7 @@ function saveEvent(d){
   if(d.repeat==='weekly'&&!d.days.length)return fail(d,'Chọn ít nhất một ngày trong tuần.');
   if(d.repeat!=='none'&&d.until&&d.until<d.start)return fail(d,'Ngày kết thúc lặp phải sau ngày bắt đầu.');
   var old=d.id?S.events.filter(function(x){return x.id===d.id;})[0]:null;
-  var ev={id:d.id||uid(),title:title,label:d.label,allDay:!!d.allDay,start:d.start,time:d.allDay?'':d.time,end:d.allDay?'':(d.end||''),repeat:d.repeat,days:d.repeat==='weekly'?d.days.slice().sort():[],until:d.repeat==='none'?'':(d.until||''),remind:d.remind===''||d.remind==null?null:+d.remind,note:(d.note||'').trim(),endDate:d.multi&&d.endDate>d.start?d.endDate:'',skip:old&&old.skip?old.skip:[]};
+  var ev={id:d.id||uid(),title:title,label:d.label,allDay:!!d.allDay,start:d.start,time:d.allDay?'':d.time,end:d.allDay?'':(d.end||''),repeat:d.repeat,days:d.repeat==='weekly'?d.days.slice().sort():[],until:d.repeat==='none'?'':(d.until||''),remind:d.remind===''||d.remind==null?null:+d.remind,note:(d.note||'').trim(),endDate:d.multi&&d.endDate>d.start?d.endDate:'',skip:old&&old.skip?old.skip:[],moves:old&&old.moves&&d.repeat!=='none'?old.moves:undefined,bday:!!d.bday,byear:d.byear?String(d.byear).trim():''};
   upsert(S.events,ev);mark('events');
   if(ev.repeat==='none')jumpTo(ev.start);
   closeAll();render();
@@ -1801,6 +1869,12 @@ document.addEventListener('click',function(ev){
   case 'fv-tog':var tk=b.getAttribute('data-k'),cur=Array.isArray(d.v[tk])?d.v[tk]:(d.v[tk]?[d.v[tk]]:[]),ix=cur.indexOf(v);if(ix>=0)cur.splice(ix,1);else cur.push(v);d.v[tk]=cur;renderSheet();break;
   case 'mit-tap':pokeXu();break;
   case 'new-trip':stack=[];newTrip();break;
+  case 'new-bday':stack=[];newBday();break;
+  case 'move-occ-ed':var mid=d.id,mocc=d.occ;closeAll();openMove(mid,mocc);break;
+  case 'mv-pick':d.to=v;d.err='';renderSheet();break;
+  case 'mv-reset':d.to=d.from;d.time=(getEv(d.id)||{}).time||'';saveMove(d);break;
+  case 'save-move':saveMove(d);break;
+  case 'toggle-hol':S.settings.holidays=S.settings.holidays===false;holCache={};mark('settings');render();break;
   case 'open-trip':openTrip(id);break;
   case 'trip-tab':d.tab=v;d.addDay='';renderSheet();break;
   case 'save-trip':saveTrip(d);break;
@@ -1955,8 +2029,8 @@ function tick(){
   var nowMs=now.getTime();
   [today,addDays(today,1)].forEach(function(ds){
     eventsOn(ds).forEach(function(e){
-      if(e.remind==null||e.allDay||!e.time)return;
-      var at=parse(ds);at.setHours(0,toMin(e.time),0,0);var trig=at.getTime()-e.remind*60000;
+      if(e.remind==null||e.trip||(!e.allDay&&!e.time))return;
+      var at=parse(ds);at.setHours(0,toMin(e.allDay?'08:00':e.time),0,0);var trig=at.getTime()-e.remind*60000;
       var key='e'+e.id+ds;
       if(nowMs>=trig&&nowMs<trig+180000&&!fired[key]){fired[key]=1;toast(e.title,(ds===today?'Hôm nay':'Ngày mai')+' lúc '+e.time+' · '+getLabel(e.label).name);}
     });
